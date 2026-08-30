@@ -1,0 +1,108 @@
+import { adminClient, requireUser } from '../_shared/supabaseAdmin.ts'
+import { corsHeaders } from '../_shared/cors.ts'
+import { bookingRequestSchema } from '../_shared/validation.ts'
+import { randomNonce, signClaims } from '../_shared/qr.ts'
+
+const CURRENT_KEY_ID = Deno.env.get('SIGNING_KEY_ID') ?? 'key-2026-01'
+const PRIVATE_KEY = Deno.env.get('ED25519_PRIVATE_KEY')!
+const TICKET_VALID_HOURS = 8
+
+Deno.serve(async (req) => {
+  const headers = corsHeaders(req.headers.get('Origin'))
+  if (req.method === 'OPTIONS') return new Response(null, { headers })
+
+  const user = await requireUser(req)
+  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers })
+
+  const body = bookingRequestSchema.safeParse(await req.json().catch(() => null))
+  if (!body.success) {
+    return new Response(JSON.stringify({ error: body.error.message }), { status: 400, headers })
+  }
+  const { programId, slotId, passengerCount } = body.data
+
+  const admin = adminClient()
+
+  const { data: program, error: programError } = await admin
+    .from('programs')
+    .select('id, price')
+    .eq('id', programId)
+    .single()
+  if (programError || !program) {
+    return new Response(JSON.stringify({ error: 'Program not found' }), { status: 404, headers })
+  }
+
+  const { data: slot, error: slotError } = await admin
+    .from('program_slots')
+    .select('id, program_id, starts_at, ends_at, available_capacity')
+    .eq('id', slotId)
+    .eq('program_id', programId)
+    .single()
+  if (slotError || !slot) {
+    return new Response(JSON.stringify({ error: 'Slot not found' }), { status: 404, headers })
+  }
+
+  // Atomically reserve capacity: only succeeds if enough seats are still available,
+  // preventing a race between two concurrent bookings from overselling the slot.
+  const { data: reserved, error: reserveError } = await admin
+    .from('program_slots')
+    .update({ available_capacity: slot.available_capacity - passengerCount })
+    .eq('id', slotId)
+    .gte('available_capacity', passengerCount)
+    .select()
+    .single()
+  if (reserveError || !reserved) {
+    return new Response(JSON.stringify({ error: 'Not enough capacity left in this slot' }), {
+      status: 409,
+      headers,
+    })
+  }
+
+  const amount = Number(program.price) * passengerCount
+  const ticketNumber = `TKT-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`
+  const issuedAt = new Date()
+  const expiresAt = new Date(slot.ends_at)
+  if (expiresAt.getTime() < issuedAt.getTime() + TICKET_VALID_HOURS * 60 * 60 * 1000) {
+    expiresAt.setTime(issuedAt.getTime() + TICKET_VALID_HOURS * 60 * 60 * 1000)
+  }
+
+  const { data: ticket, error: ticketError } = await admin
+    .from('tickets')
+    .insert({
+      ticket_number: ticketNumber,
+      user_id: user.id,
+      program_id: programId,
+      slot_id: slotId,
+      passenger_count: passengerCount,
+      amount,
+      issued_at: issuedAt.toISOString(),
+      expires_at: expiresAt.toISOString(),
+    })
+    .select()
+    .single()
+
+  if (ticketError || !ticket) {
+    // Roll back the capacity reservation since ticket creation failed.
+    await admin
+      .from('program_slots')
+      .update({ available_capacity: reserved.available_capacity + passengerCount })
+      .eq('id', slotId)
+    return new Response(JSON.stringify({ error: 'Failed to create ticket' }), { status: 500, headers })
+  }
+
+  const claims = {
+    v: 1 as const,
+    kid: CURRENT_KEY_ID,
+    tid: ticket.id,
+    uid: user.id,
+    pid: programId,
+    ts: issuedAt.toISOString(),
+    exp: expiresAt.toISOString(),
+    p: passengerCount,
+    nonce: randomNonce(),
+  }
+  const sig = await signClaims(claims, PRIVATE_KEY)
+
+  return new Response(JSON.stringify({ qr: { ...claims, sig }, ticket }), {
+    headers: { ...headers, 'Content-Type': 'application/json' },
+  })
+})
