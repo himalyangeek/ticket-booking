@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import type { BookingInput, FindTicketInput } from './validation'
-import type { Program, ProgramSlot, QrPayload, ScanOutcome, Ticket } from '../types/ticket'
+import type { Program, ProgramSlot, QrPayload, ScanOutcome, Ticket, TicketWithJoins } from '../types/ticket'
 
 async function invoke<T>(functionName: string, body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke<T>(functionName, { body })
@@ -21,7 +21,7 @@ export function consumeTicket(ticketId: string) {
 }
 
 export function findTicket(input: FindTicketInput) {
-  return invoke<{ ticket: Ticket; qr: QrPayload }>('find-ticket', input)
+  return invoke<{ ticket: TicketWithJoins; qr: QrPayload }>('find-ticket', input)
 }
 
 export async function listPrograms() {

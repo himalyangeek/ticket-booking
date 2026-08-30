@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Calendar } from './Calendar'
+import { DownloadTicketButton } from './DownloadTicketButton'
 import { MonkeyMascot } from './MonkeyMascot'
 import { TicketQR } from './TicketQR'
 import { createTicket, listSlotsForDate } from '../lib/api'
@@ -249,9 +250,23 @@ export function BookingDialog({ program, onClose }: { program: Program; onClose:
               Save your ticket number and mobile number — you can look this ticket up anytime from{' '}
               <span className="font-semibold">Find My Ticket</span>.
             </p>
-            <button onClick={onClose} className="rounded-full bg-jungle-500 px-6 py-2 font-bold text-white">
-              Done
-            </button>
+            <div className="flex flex-wrap justify-center gap-2">
+              <DownloadTicketButton
+                qr={result.qr}
+                meta={{
+                  ticketNumber: result.ticket.ticket_number,
+                  programName: program.name,
+                  forestRange: program.forest_range,
+                  visitDate: result.ticket.visit_date,
+                  sessionLabel: selectedSlot?.session_label,
+                  passengerCount: result.ticket.passenger_count,
+                  status: result.ticket.status,
+                }}
+              />
+              <button onClick={onClose} className="rounded-full bg-jungle-500 px-6 py-2 font-bold text-white">
+                Done
+              </button>
+            </div>
           </div>
         )}
       </div>

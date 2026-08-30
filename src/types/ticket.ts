@@ -43,6 +43,11 @@ export interface Ticket {
   created_at: string
 }
 
+export type TicketWithJoins = Ticket & {
+  programs: { name: string; forest_range: string } | null
+  program_slots: { starts_at: string; ends_at: string; session_label: string } | null
+}
+
 export interface QrPayload {
   v: 1
   kid: string

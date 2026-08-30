@@ -1,13 +1,14 @@
 import { useState, type FormEvent } from 'react'
+import { DownloadTicketButton } from '../components/DownloadTicketButton'
 import { Navbar } from '../components/Navbar'
 import { TicketQR } from '../components/TicketQR'
 import { findTicket } from '../lib/api'
-import type { QrPayload, Ticket } from '../types/ticket'
+import type { QrPayload, TicketWithJoins } from '../types/ticket'
 
 export default function FindTicket() {
   const [ticketNumber, setTicketNumber] = useState('')
   const [mobile, setMobile] = useState('')
-  const [result, setResult] = useState<{ ticket: Ticket; qr: QrPayload } | null>(null)
+  const [result, setResult] = useState<{ ticket: TicketWithJoins; qr: QrPayload } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -66,6 +67,18 @@ export default function FindTicket() {
               {result.ticket.passenger_count} passenger{result.ticket.passenger_count === 1 ? '' : 's'} ·{' '}
               {result.ticket.status}
             </p>
+            <DownloadTicketButton
+              qr={result.qr}
+              meta={{
+                ticketNumber: result.ticket.ticket_number,
+                programName: result.ticket.programs?.name ?? 'Safari',
+                forestRange: result.ticket.programs?.forest_range ?? '',
+                visitDate: result.ticket.visit_date,
+                sessionLabel: result.ticket.program_slots?.session_label,
+                passengerCount: result.ticket.passenger_count,
+                status: result.ticket.status,
+              }}
+            />
           </div>
         )}
       </div>

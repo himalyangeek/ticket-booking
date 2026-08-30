@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Navbar } from '../components/Navbar'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 
@@ -37,36 +38,43 @@ export default function StaffLogin() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 rounded-2xl bg-white/95 px-6 py-8 shadow-xl backdrop-blur-sm">
-      <h1 className="font-display text-2xl font-bold text-jungle-800">Staff Login</h1>
-      <p className="text-sm text-gray-500">For forest department rangers and administrators only.</p>
+    <div className="min-h-screen">
+      <Navbar />
+      <div className="mx-auto mt-6 flex max-w-sm flex-col gap-4 rounded-2xl bg-white/95 px-6 py-8 shadow-xl backdrop-blur-sm">
+        <h1 className="font-display text-2xl font-bold text-jungle-800">Staff Login</h1>
+        <p className="text-sm text-gray-500">For forest department rangers and administrators only.</p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <input
-          required
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="rounded-lg border-2 border-jungle-200 px-3 py-2"
-        />
-        <input
-          required
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="rounded-lg border-2 border-jungle-200 px-3 py-2"
-        />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-full bg-jungle-500 py-2 font-display font-bold text-white disabled:opacity-50"
-        >
-          {submitting ? 'Signing in…' : 'Sign in'}
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <input
+            required
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="rounded-lg border-2 border-jungle-200 px-3 py-2"
+          />
+          <input
+            required
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="rounded-lg border-2 border-jungle-200 px-3 py-2"
+          />
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded-full bg-jungle-500 py-2 font-display font-bold text-white disabled:opacity-50"
+          >
+            {submitting ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+
+        <Link to="/" className="text-center text-sm text-jungle-600 underline">
+          ← Back to Home
+        </Link>
+      </div>
     </div>
   )
 }
