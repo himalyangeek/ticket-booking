@@ -1,24 +1,24 @@
-import { adminClient, requireUser } from '../_shared/supabaseAdmin.ts'
+import { adminClient } from '../_shared/supabaseAdmin.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { bookingRequestSchema } from '../_shared/validation.ts'
 import { randomNonce, signClaims } from '../_shared/qr.ts'
+import { hashAadhaar } from '../_shared/aadhaar.ts'
 
 const CURRENT_KEY_ID = Deno.env.get('SIGNING_KEY_ID') ?? 'key-2026-01'
 const PRIVATE_KEY = Deno.env.get('ED25519_PRIVATE_KEY')!
 const TICKET_VALID_HOURS = 8
 
+// Public booking endpoint — visitors don't have accounts, so anyone can call this.
+// Payment is mocked for now: it always "succeeds" the moment the visitor confirms.
 Deno.serve(async (req) => {
   const headers = corsHeaders(req.headers.get('Origin'))
   if (req.method === 'OPTIONS') return new Response(null, { headers })
-
-  const user = await requireUser(req)
-  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers })
 
   const body = bookingRequestSchema.safeParse(await req.json().catch(() => null))
   if (!body.success) {
     return new Response(JSON.stringify({ error: body.error.message }), { status: 400, headers })
   }
-  const { programId, slotId, passengerCount } = body.data
+  const { programId, slotId, passengerCount, bookerName, bookerMobile, aadhaarNumber } = body.data
 
   const admin = adminClient()
 
@@ -65,15 +65,27 @@ Deno.serve(async (req) => {
     expiresAt.setTime(issuedAt.getTime() + TICKET_VALID_HOURS * 60 * 60 * 1000)
   }
 
+  const { last4, hash } = await hashAadhaar(aadhaarNumber)
+
+  // Mock payment gateway: this is the single place a real gateway integration
+  // (Razorpay/PayU) would slot in later — verify payment, then proceed.
+  const paymentReference = `MOCK-${crypto.randomUUID()}`
+
   const { data: ticket, error: ticketError } = await admin
     .from('tickets')
     .insert({
       ticket_number: ticketNumber,
-      user_id: user.id,
       program_id: programId,
       slot_id: slotId,
       passenger_count: passengerCount,
       amount,
+      booker_name: bookerName,
+      booker_mobile: bookerMobile,
+      aadhaar_last4: last4,
+      aadhaar_hash: hash,
+      visit_date: slot.starts_at.slice(0, 10),
+      payment_status: 'PAID',
+      payment_reference: paymentReference,
       issued_at: issuedAt.toISOString(),
       expires_at: expiresAt.toISOString(),
     })
@@ -93,7 +105,6 @@ Deno.serve(async (req) => {
     v: 1 as const,
     kid: CURRENT_KEY_ID,
     tid: ticket.id,
-    uid: user.id,
     pid: programId,
     ts: issuedAt.toISOString(),
     exp: expiresAt.toISOString(),

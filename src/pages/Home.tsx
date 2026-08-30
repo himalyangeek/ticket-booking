@@ -1,18 +1,54 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { BookingDialog } from '../components/BookingDialog'
+import { JungleBackground } from '../components/JungleBackground'
+import { Navbar } from '../components/Navbar'
+import { listPrograms } from '../lib/api'
+import type { Program } from '../types/ticket'
 
 export default function Home() {
+  const [programs, setPrograms] = useState<Program[]>([])
+  const [selected, setSelected] = useState<Program | null>(null)
+  const [hoveredCard, setHoveredCard] = useState(false)
+
+  useEffect(() => {
+    listPrograms().then(setPrograms)
+  }, [])
+
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-3 px-4 py-10">
-      <h1 className="text-2xl font-semibold">Ticket Booking</h1>
-      <Link to="/book" className="rounded border px-4 py-2 text-center hover:bg-gray-50">
-        Book a ticket
-      </Link>
-      <Link to="/tickets" className="rounded border px-4 py-2 text-center hover:bg-gray-50">
-        My tickets
-      </Link>
-      <Link to="/scan" className="rounded border px-4 py-2 text-center hover:bg-gray-50">
-        Scan tickets
-      </Link>
+    <div>
+      <JungleBackground watching={hoveredCard} />
+      <Navbar />
+
+      <header className="px-4 py-10 text-center sm:px-8">
+        <p className="animate-bounce-slow text-6xl">🐯🌳🐒</p>
+        <h1 className="mt-2 font-display text-3xl font-extrabold text-white drop-shadow-sm sm:text-4xl">
+          Explore Chhattisgarh's Wild Side
+        </h1>
+        <p className="mx-auto mt-2 max-w-md text-jungle-100">
+          Pick a forest range, choose your safari date, and meet the tigers, leopards and bison of Chhattisgarh!
+          Hover a card — the monkeys in the trees will watch you back. 🐒
+        </p>
+      </header>
+
+      <main className="grid grid-cols-1 gap-4 px-4 pb-16 sm:grid-cols-2 sm:px-8 lg:grid-cols-3">
+        {programs.map((program) => (
+          <button
+            key={program.id}
+            onClick={() => setSelected(program)}
+            onMouseEnter={() => setHoveredCard(true)}
+            onMouseLeave={() => setHoveredCard(false)}
+            className="animate-pop-in flex flex-col gap-2 rounded-2xl border-2 border-jungle-200/60 bg-white/90 p-4 text-left shadow-lg backdrop-blur-sm transition hover:-translate-y-1 hover:shadow-xl"
+          >
+            <span className="animate-sway inline-block text-4xl">{program.animal_emoji}</span>
+            <p className="font-display text-lg font-bold text-jungle-800">{program.name}</p>
+            <p className="text-xs font-semibold text-jungle-500">{program.forest_range}</p>
+            <p className="text-sm text-gray-500">{program.description}</p>
+            <p className="mt-auto font-display font-bold text-jungle-700">₹{program.price} / person</p>
+          </button>
+        ))}
+      </main>
+
+      {selected && <BookingDialog program={selected} onClose={() => setSelected(null)} />}
     </div>
   )
 }

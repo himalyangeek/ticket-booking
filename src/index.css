@@ -1,5 +1,72 @@
 @import "tailwindcss";
 
+@theme {
+  --font-display: "Baloo 2", "Comic Sans MS", ui-rounded, sans-serif;
+  --color-jungle-50: #f0faf1;
+  --color-jungle-100: #d9f2dc;
+  --color-jungle-200: #b3e5ba;
+  --color-jungle-300: #7fd18c;
+  --color-jungle-400: #4bb85e;
+  --color-jungle-500: #2f9c42;
+  --color-jungle-600: #237a33;
+  --color-jungle-700: #1d5f2a;
+  --color-jungle-800: #184b24;
+  --color-jungle-900: #123a1c;
+  --color-sunlight-400: #ffd54f;
+  --color-sunlight-500: #ffc107;
+  --color-bark-600: #6b4226;
+  --color-bark-700: #4f2f1a;
+
+  --animate-sway: sway 3s ease-in-out infinite;
+  --animate-bounce-slow: bounce-slow 2.4s ease-in-out infinite;
+  --animate-pop-in: pop-in 0.25s ease-out;
+  --animate-canopy-sway: canopy-sway 6s ease-in-out infinite;
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes canopy-sway {
+  0%, 100% { transform: rotate(-1.5deg); }
+  50% { transform: rotate(1.5deg); }
+}
+
+/* Ambient background monkeys: one shared hop arc, reused with different
+   per-instance --hop-x/--hop-y/duration/delay so the troupe doesn't move in sync. */
+@keyframes monkey-hop {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  45% { transform: translate(calc(var(--hop-x, 30px) * 0.6), calc(var(--hop-y, -40px) * 1.05)) rotate(-6deg); }
+  50% { transform: translate(var(--hop-x, 30px), var(--hop-y, -40px)) rotate(0deg); }
+  55% { transform: translate(calc(var(--hop-x, 30px) * 0.6), calc(var(--hop-y, -40px) * 1.05)) rotate(6deg); }
+}
+
+@keyframes vine-climb {
+  0% { transform: translate(0, 0) rotate(-4deg); }
+  25% { transform: translate(8px, -22px) rotate(4deg); }
+  50% { transform: translate(-6px, -44px) rotate(-4deg); }
+  75% { transform: translate(8px, -66px) rotate(4deg); }
+  100% { transform: translate(0, -86px) rotate(-4deg); }
+}
+
+@keyframes vine-sway {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+
 body {
   margin: 0;
+  font-family: var(--font-display);
+  background: var(--color-jungle-900);
 }

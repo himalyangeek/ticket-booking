@@ -13,10 +13,11 @@ Deno.serve(async (req) => {
 
   const { data: scannerProfile } = await admin
     .from('profiles')
-    .select('is_scanner')
+    .select('role')
     .eq('id', scanner.id)
     .single()
-  if (!scannerProfile?.is_scanner) {
+  // Both designations can scan — ADMIN can additionally view the full dashboard.
+  if (scannerProfile?.role !== 'ADMIN' && scannerProfile?.role !== 'TICKET_CHECKER') {
     return new Response(JSON.stringify({ error: 'Not authorized to scan tickets' }), { status: 403, headers })
   }
 

@@ -1,57 +1,38 @@
 import { Suspense, lazy } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
-import Booking from './pages/Booking'
+import FindTicket from './pages/FindTicket'
 import Home from './pages/Home'
-import Login from './pages/Login'
-import MyTickets from './pages/MyTickets'
-import TicketDetails from './pages/TicketDetails'
+import StaffLogin from './pages/StaffLogin'
 
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 // The scanner page pulls in a camera/barcode-detection library only staff need —
-// code-split so regular ticket buyers never download it.
+// code-split so regular visitors never download it.
 const Scanner = lazy(() => import('./pages/Scanner'))
+
+const loadingFallback = <p className="p-6 text-center text-gray-500">Loading…</p>
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Home />} />
+      <Route path="/find-ticket" element={<FindTicket />} />
+      <Route path="/staff/login" element={<StaffLogin />} />
       <Route
-        path="/"
+        path="/admin"
         element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/book"
-        element={
-          <ProtectedRoute>
-            <Booking />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/tickets"
-        element={
-          <ProtectedRoute>
-            <MyTickets />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/tickets/:ticketId"
-        element={
-          <ProtectedRoute>
-            <TicketDetails />
+          <ProtectedRoute require="admin">
+            <Suspense fallback={loadingFallback}>
+              <AdminDashboard />
+            </Suspense>
           </ProtectedRoute>
         }
       />
       <Route
         path="/scan"
         element={
-          <ProtectedRoute>
-            <Suspense fallback={<p className="p-6 text-center text-gray-500">Loading…</p>}>
+          <ProtectedRoute require="scanner">
+            <Suspense fallback={loadingFallback}>
               <Scanner />
             </Suspense>
           </ProtectedRoute>

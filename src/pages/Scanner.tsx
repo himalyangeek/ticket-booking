@@ -1,10 +1,14 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { QRScanner } from '../components/QRScanner'
+import { useAuth } from '../lib/AuthContext'
 import { consumeTicket, verifyTicket } from '../lib/api'
+import { supabase } from '../lib/supabase'
 import { parseQrPayload } from '../lib/validation'
 import type { ScanOutcome } from '../types/ticket'
 
 export default function Scanner() {
+  const { profile } = useAuth()
   const [outcome, setOutcome] = useState<ScanOutcome | null>(null)
   const [busy, setBusy] = useState(false)
   const [parseError, setParseError] = useState<string | null>(null)
@@ -49,8 +53,23 @@ export default function Scanner() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-10">
-      <h1 className="text-2xl font-semibold">Scan tickets</h1>
+    <div className="mx-auto my-6 flex max-w-md flex-col items-center gap-4 rounded-2xl bg-white/95 px-4 py-10 shadow-xl backdrop-blur-sm">
+      <div className="flex w-full items-center justify-between">
+        <h1 className="text-2xl font-semibold">Scan tickets</h1>
+        <div className="flex items-center gap-2">
+          {profile?.role === 'ADMIN' && (
+            <Link to="/admin" className="rounded-full border-2 border-jungle-200 px-3 py-1 text-sm text-jungle-700">
+              Dashboard
+            </Link>
+          )}
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="rounded-full border-2 border-jungle-200 px-3 py-1 text-sm text-jungle-700"
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
 
       <QRScanner onDecode={handleDecode} paused={busy || outcome !== null} />
 

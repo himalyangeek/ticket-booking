@@ -7,7 +7,6 @@ export interface QrClaims {
   v: 1
   kid: string
   tid: string
-  uid: string
   pid: string
   ts: string
   exp: string
@@ -21,7 +20,6 @@ export function canonicalize(claims: QrClaims): string {
     `v=${claims.v}`,
     `kid=${claims.kid}`,
     `tid=${claims.tid}`,
-    `uid=${claims.uid}`,
     `pid=${claims.pid}`,
     `ts=${claims.ts}`,
     `exp=${claims.exp}`,

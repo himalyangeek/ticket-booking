@@ -31,10 +31,11 @@ Deno.serve(async (req) => {
 
   const { data: scannerProfile } = await admin
     .from('profiles')
-    .select('is_scanner')
+    .select('role')
     .eq('id', scanner.id)
     .single()
-  if (!scannerProfile?.is_scanner) {
+  // Both designations can scan — ADMIN can additionally view the full dashboard.
+  if (scannerProfile?.role !== 'ADMIN' && scannerProfile?.role !== 'TICKET_CHECKER') {
     return new Response(JSON.stringify({ error: 'Not authorized to scan tickets' }), { status: 403, headers })
   }
 
@@ -63,7 +64,7 @@ Deno.serve(async (req) => {
   }
 
   // Never trust the QR's own claims for these fields — only the database is authoritative.
-  if (ticket.user_id !== claims.uid || ticket.program_id !== claims.pid) {
+  if (ticket.program_id !== claims.pid) {
     await logScan(admin, ticket.id, scanner.id, 'INVALID', 'Claims do not match database record')
     return new Response(JSON.stringify({ result: 'INVALID', reason: 'Ticket claims do not match records' }), {
       headers,
