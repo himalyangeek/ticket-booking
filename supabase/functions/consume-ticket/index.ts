@@ -1,4 +1,4 @@
-import { adminClient, requireUser } from '../_shared/supabaseAdmin.ts'
+import { adminClient, requireUser, runInBackground } from '../_shared/supabaseAdmin.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { consumeRequestSchema } from '../_shared/validation.ts'
 
@@ -6,22 +6,22 @@ Deno.serve(async (req) => {
   const headers = corsHeaders(req.headers.get('Origin'))
   if (req.method === 'OPTIONS') return new Response(null, { headers })
 
-  const scanner = await requireUser(req)
+  const scanner = requireUser(req)
   if (!scanner) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers })
+  const scannerId = scanner.id
 
   const admin = adminClient()
 
-  const { data: scannerProfile } = await admin
-    .from('profiles')
-    .select('role')
-    .eq('id', scanner.id)
-    .single()
+  // Runs alongside the (synchronous) body parse below instead of in front of it.
+  const rolePromise = admin.from('profiles').select('role').eq('id', scannerId).single()
+  const body = consumeRequestSchema.safeParse(await req.json().catch(() => null))
+
+  const { data: scannerProfile } = await rolePromise
   // Both designations can scan — ADMIN can additionally view the full dashboard.
   if (scannerProfile?.role !== 'ADMIN' && scannerProfile?.role !== 'TICKET_CHECKER') {
     return new Response(JSON.stringify({ error: 'Not authorized to scan tickets' }), { status: 403, headers })
   }
 
-  const body = consumeRequestSchema.safeParse(await req.json().catch(() => null))
   if (!body.success) {
     return new Response(JSON.stringify({ error: body.error.message }), { status: 400, headers })
   }
@@ -50,18 +50,23 @@ Deno.serve(async (req) => {
       : current.status !== 'ACTIVE'
         ? `Ticket already ${current.status}`
         : 'Ticket expired'
-    await admin
-      .from('ticket_scan_events')
-      .insert({ ticket_id: ticketId, scanner_user_id: scanner.id, result: 'INVALID', reason })
-    return new Response(JSON.stringify({ result: 'INVALID', reason, ticket: current ?? undefined }), { headers })
+    // Audit logging never needs to hold up the response — fire it in the background.
+    runInBackground(
+      admin.from('ticket_scan_events').insert({ ticket_id: ticketId, scanner_user_id: scannerId, result: 'INVALID', reason }),
+    )
+    return new Response(JSON.stringify({ result: 'INVALID', reason, ticket: current ?? undefined }), {
+      headers: { ...headers, 'Content-Type': 'application/json' },
+    })
   }
 
-  await admin.from('ticket_scan_events').insert({
-    ticket_id: consumed.id,
-    scanner_user_id: scanner.id,
-    result: 'VALID',
-    reason: 'Consumed',
-  })
+  runInBackground(
+    admin.from('ticket_scan_events').insert({
+      ticket_id: consumed.id,
+      scanner_user_id: scannerId,
+      result: 'VALID',
+      reason: 'Consumed',
+    }),
+  )
 
   return new Response(JSON.stringify({ result: 'VALID', ticket: consumed }), {
     headers: { ...headers, 'Content-Type': 'application/json' },

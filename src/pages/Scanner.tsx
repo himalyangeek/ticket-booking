@@ -86,10 +86,21 @@ export default function Scanner() {
           </p>
           {outcome.reason && <p className="text-sm text-gray-600">{outcome.reason}</p>}
           {outcome.ticket && (
-            <p className="mt-1 text-xs text-gray-500">
-              {outcome.ticket.ticket_number} · {outcome.ticket.passenger_count} passenger
-              {outcome.ticket.passenger_count === 1 ? '' : 's'}
-            </p>
+            <div className="mt-2 flex flex-col gap-0.5 text-left text-sm text-gray-700">
+              <p className="text-center font-mono text-xs text-gray-500">{outcome.ticket.ticket_number}</p>
+              <p>
+                <span className="text-gray-500">Booker:</span> {outcome.ticket.booker_name}
+              </p>
+              <p>
+                <span className="text-gray-500">Mobile:</span> {outcome.ticket.booker_mobile}
+              </p>
+              <p>
+                <span className="text-gray-500">Aadhaar:</span> •••• •••• {outcome.ticket.aadhaar_last4}
+              </p>
+              <p>
+                <span className="text-gray-500">Passengers:</span> {outcome.ticket.passenger_count}
+              </p>
+            </div>
           )}
 
           <div className="mt-3 flex justify-center gap-2">
