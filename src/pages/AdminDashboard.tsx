@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { DateField } from '../components/DateField'
 import { SnakeLoader } from '../components/SnakeLoader'
 import { StaffTabBar } from '../components/StaffTabBar'
 import { listAdminTickets } from '../lib/api'
@@ -8,6 +9,16 @@ type TicketRow = Awaited<ReturnType<typeof listAdminTickets>>[number]
 function isExpired(ticket: TicketRow) {
   return ticket.status === 'ACTIVE' && new Date(ticket.expires_at).getTime() <= Date.now()
 }
+
+// Bookings can be filtered well into the past or future, unlike the public
+// booking calendar which only looks a month ahead.
+function isoDaysFromNow(days: number) {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+const FILTER_MIN_DATE = isoDaysFromNow(-730)
+const FILTER_MAX_DATE = isoDaysFromNow(730)
 
 export default function AdminDashboard() {
   const [tickets, setTickets] = useState<TicketRow[]>([])
@@ -32,19 +43,12 @@ export default function AdminDashboard() {
           <h1 className="mb-4 font-display text-2xl font-bold text-jungle-800">Booking Dashboard</h1>
 
           <div className="mb-4 flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-600">Visit date from</span>
-              <input
-                type="date"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                className="rounded border px-2 py-1"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-600">Visit date to</span>
-              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded border px-2 py-1" />
-            </label>
+            <div className="w-40">
+              <DateField label="Visit date from" value={from} onChange={setFrom} minDate={FILTER_MIN_DATE} maxDate={FILTER_MAX_DATE} />
+            </div>
+            <div className="w-40">
+              <DateField label="Visit date to" value={to} onChange={setTo} minDate={FILTER_MIN_DATE} maxDate={FILTER_MAX_DATE} />
+            </div>
             {(from || to) && (
               <button
                 onClick={() => {

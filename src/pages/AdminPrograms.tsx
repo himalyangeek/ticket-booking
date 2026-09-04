@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { DateTimeField } from '../components/DateField'
 import { SnakeLoader } from '../components/SnakeLoader'
 import { StaffTabBar } from '../components/StaffTabBar'
 import {
@@ -17,6 +18,15 @@ import type { ProgramSlot } from '../types/ticket'
 function fromLocalInputValue(value: string) {
   return new Date(value).toISOString()
 }
+
+// Safari timings can be scheduled well beyond the public 30-day booking window.
+function isoDaysFromNow(days: number) {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+const SLOT_MIN_DATE = isoDaysFromNow(0)
+const SLOT_MAX_DATE = isoDaysFromNow(730)
 
 const inputClass = 'w-full min-w-0 box-border rounded border px-2 py-1.5 text-sm'
 
@@ -206,12 +216,8 @@ function NewSlotForm({ programId, onCreated }: { programId: string; onCreated: (
             className={inputClass}
           />
         </Field>
-        <Field label="Starts at">
-          <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className={inputClass} />
-        </Field>
-        <Field label="Ends at">
-          <input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} className={inputClass} />
-        </Field>
+        <DateTimeField label="Starts at" value={start} onChange={setStart} minDate={SLOT_MIN_DATE} maxDate={SLOT_MAX_DATE} />
+        <DateTimeField label="Ends at" value={end} onChange={setEnd} minDate={SLOT_MIN_DATE} maxDate={SLOT_MAX_DATE} />
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="flex gap-2">

@@ -3,8 +3,12 @@ import { useMemo, useState } from 'react'
 interface CalendarProps {
   value: string | null
   onChange: (isoDate: string) => void
-  /** How many days ahead (from today) are bookable. */
+  /** How many days ahead (from today) are bookable. Ignored if maxDate is given. */
   daysAhead?: number
+  /** ISO date floor (inclusive). Defaults to today. */
+  minDate?: string
+  /** ISO date ceiling (inclusive). Defaults to today + daysAhead. */
+  maxDate?: string
 }
 
 function toISODate(d: Date) {
@@ -16,25 +20,35 @@ function toISODate(d: Date) {
   return `${year}-${month}-${day}`
 }
 
+function parseISODate(iso: string) {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-export function Calendar({ value, onChange, daysAhead = 30 }: CalendarProps) {
+export function Calendar({ value, onChange, daysAhead = 30, minDate, maxDate }: CalendarProps) {
   const today = useMemo(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
     return d
   }, [])
-  const maxDate = useMemo(() => {
+  const rangeMin = useMemo(() => (minDate ? parseISODate(minDate) : today), [minDate, today])
+  const rangeMax = useMemo(() => {
+    if (maxDate) return parseISODate(maxDate)
     const d = new Date(today)
     d.setDate(d.getDate() + daysAhead)
     return d
-  }, [today, daysAhead])
+  }, [maxDate, today, daysAhead])
 
-  const [viewMonth, setViewMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
+  const [viewMonth, setViewMonth] = useState(() => {
+    const start = value ? parseISODate(value) : rangeMin
+    return new Date(start.getFullYear(), start.getMonth(), 1)
+  })
 
   const weeks = useMemo(() => {
     const firstOfMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1)
@@ -52,8 +66,8 @@ export function Calendar({ value, onChange, daysAhead = 30 }: CalendarProps) {
     return rows
   }, [viewMonth])
 
-  const canGoPrev = viewMonth > new Date(today.getFullYear(), today.getMonth(), 1)
-  const canGoNext = viewMonth < new Date(maxDate.getFullYear(), maxDate.getMonth(), 1)
+  const canGoPrev = viewMonth > new Date(rangeMin.getFullYear(), rangeMin.getMonth(), 1)
+  const canGoNext = viewMonth < new Date(rangeMax.getFullYear(), rangeMax.getMonth(), 1)
 
   return (
     <div className="w-full max-w-full rounded-xl border-2 border-jungle-200 bg-white p-3 box-border">
@@ -98,7 +112,7 @@ export function Calendar({ value, onChange, daysAhead = 30 }: CalendarProps) {
           {row.map((date, j) => {
             if (!date) return <div key={j} />
             const iso = toISODate(date)
-            const disabled = date < today || date > maxDate
+            const disabled = date < rangeMin || date > rangeMax
             const selected = value === iso
             return (
               <div key={j} className="flex items-center justify-center">

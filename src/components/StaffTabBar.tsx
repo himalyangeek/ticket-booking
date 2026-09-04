@@ -14,7 +14,17 @@ export function StaffTabBar() {
 
   return (
     <nav className="sticky top-0 z-20 flex items-center justify-between gap-2 bg-jungle-800 px-3 py-2 sm:px-6">
-      <div className="flex min-w-0 gap-1 overflow-x-auto">
+      <div className="flex min-w-0 items-center gap-1 overflow-x-auto">
+        <Link
+          to="/"
+          aria-label="Go to home page"
+          className="mr-1 flex shrink-0 items-center justify-center rounded-full p-2 text-jungle-100 hover:bg-white/10"
+        >
+          <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d="M3 9.5 10 3l7 6.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M5 8v8h10V8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
         {tabs.map((tab) => {
           const active = pathname === tab.to
           return (
