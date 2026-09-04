@@ -45,22 +45,28 @@ export default function StaffLogin() {
         <p className="text-sm text-gray-500">For forest department rangers and administrators only.</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            required
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border-2 border-jungle-200 px-3 py-2"
-          />
-          <input
-            required
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border-2 border-jungle-200 px-3 py-2"
-          />
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-gray-600">Email</span>
+            <input
+              required
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="rounded-lg border-2 border-jungle-200 px-3 py-2"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-gray-600">Password</span>
+            <input
+              required
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="rounded-lg border-2 border-jungle-200 px-3 py-2"
+            />
+          </label>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             type="submit"

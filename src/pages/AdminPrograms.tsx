@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { SnakeLoader } from '../components/SnakeLoader'
+import { StaffTabBar } from '../components/StaffTabBar'
 import {
   adminCreateProgram,
   adminCreateSlot,
@@ -11,11 +12,21 @@ import {
   type ProgramWithSlots,
   type SlotInput,
 } from '../lib/api'
-import { supabase } from '../lib/supabase'
 import type { ProgramSlot } from '../types/ticket'
 
 function fromLocalInputValue(value: string) {
   return new Date(value).toISOString()
+}
+
+const inputClass = 'w-full min-w-0 box-border rounded border px-2 py-1.5 text-sm'
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="flex min-w-0 flex-col gap-1">
+      <span className="text-xs font-semibold text-gray-600">{label}</span>
+      {children}
+    </label>
+  )
 }
 
 const emptyProgramForm = {
@@ -75,47 +86,49 @@ function NewProgramForm({ onCreated }: { onCreated: () => void }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border-2 border-jungle-200 p-4">
+    <div className="flex min-w-0 flex-col gap-3 rounded-xl border-2 border-jungle-200 p-4">
       <p className="font-display font-bold text-jungle-800">New safari program</p>
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          placeholder="Program name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="rounded border px-2 py-1"
-        />
-        <input
-          placeholder="Forest range"
-          value={form.forest_range}
-          onChange={(e) => setForm({ ...form, forest_range: e.target.value })}
-          className="rounded border px-2 py-1"
-        />
-        <input
-          type="number"
-          placeholder="Price per person (₹)"
-          value={form.price}
-          onChange={(e) => setForm({ ...form, price: e.target.value })}
-          className="rounded border px-2 py-1"
-        />
-        <input
-          placeholder="Emoji (e.g. 🐯)"
-          value={form.animal_emoji}
-          onChange={(e) => setForm({ ...form, animal_emoji: e.target.value })}
-          className="rounded border px-2 py-1"
-        />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="Program name">
+          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} />
+        </Field>
+        <Field label="Forest range">
+          <input
+            value={form.forest_range}
+            onChange={(e) => setForm({ ...form, forest_range: e.target.value })}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Price per person (₹)">
+          <input
+            type="number"
+            value={form.price}
+            onChange={(e) => setForm({ ...form, price: e.target.value })}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Emoji">
+          <input
+            value={form.animal_emoji}
+            onChange={(e) => setForm({ ...form, animal_emoji: e.target.value })}
+            className={inputClass}
+          />
+        </Field>
       </div>
-      <input
-        placeholder="Description"
-        value={form.description}
-        onChange={(e) => setForm({ ...form, description: e.target.value })}
-        className="rounded border px-2 py-1"
-      />
-      <input
-        placeholder="Native animals, comma separated (e.g. Tiger, Leopard, Bison)"
-        value={form.highlight_animals}
-        onChange={(e) => setForm({ ...form, highlight_animals: e.target.value })}
-        className="rounded border px-2 py-1"
-      />
+      <Field label="Description">
+        <input
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          className={inputClass}
+        />
+      </Field>
+      <Field label="Native animals (comma separated, e.g. Tiger, Leopard, Bison)">
+        <input
+          value={form.highlight_animals}
+          onChange={(e) => setForm({ ...form, highlight_animals: e.target.value })}
+          className={inputClass}
+        />
+      </Field>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">
         <button
@@ -180,33 +193,25 @@ function NewSlotForm({ programId, onCreated }: { programId: string; onCreated: (
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border p-3">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <input
-          placeholder="Session label"
-          value={sessionLabel}
-          onChange={(e) => setSessionLabel(e.target.value)}
-          className="rounded border px-2 py-1 text-sm"
-        />
-        <input
-          type="datetime-local"
-          value={start}
-          onChange={(e) => setStart(e.target.value)}
-          className="rounded border px-2 py-1 text-sm"
-        />
-        <input
-          type="datetime-local"
-          value={end}
-          onChange={(e) => setEnd(e.target.value)}
-          className="rounded border px-2 py-1 text-sm"
-        />
-        <input
-          type="number"
-          placeholder="Capacity"
-          value={capacity}
-          onChange={(e) => setCapacity(e.target.value)}
-          className="rounded border px-2 py-1 text-sm"
-        />
+    <div className="flex min-w-0 flex-col gap-3 rounded-lg border p-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="Session label">
+          <input value={sessionLabel} onChange={(e) => setSessionLabel(e.target.value)} className={inputClass} />
+        </Field>
+        <Field label="Capacity">
+          <input
+            type="number"
+            value={capacity}
+            onChange={(e) => setCapacity(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Starts at">
+          <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className={inputClass} />
+        </Field>
+        <Field label="Ends at">
+          <input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} className={inputClass} />
+        </Field>
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="flex gap-2">
@@ -239,13 +244,13 @@ function SlotRow({ slot, onChanged }: { slot: ProgramSlot; onChanged: () => void
   }
 
   return (
-    <div className="flex items-center justify-between rounded border px-3 py-2 text-sm">
-      <div>
+    <div className="flex items-center justify-between gap-2 rounded border px-3 py-2 text-sm">
+      <div className="min-w-0">
         <span className="font-semibold">{slot.session_label}</span> ·{' '}
         {new Date(slot.starts_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} ·{' '}
         {slot.available_capacity}/{slot.capacity} seats left
       </div>
-      <button onClick={handleDelete} className="text-xs text-red-600 underline">
+      <button onClick={handleDelete} className="shrink-0 text-xs text-red-600 underline">
         Delete
       </button>
     </div>
@@ -296,38 +301,50 @@ function ProgramCard({ program, onChanged }: { program: ProgramWithSlots; onChan
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border-2 border-jungle-100 p-4">
+    <div className="flex min-w-0 flex-col gap-3 rounded-xl border-2 border-jungle-100 p-4">
       {editing ? (
-        <div className="flex flex-col gap-2">
-          <div className="grid grid-cols-2 gap-2">
-            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded border px-2 py-1" />
-            <input
-              value={form.forest_range}
-              onChange={(e) => setForm({ ...form, forest_range: e.target.value })}
-              className="rounded border px-2 py-1"
-            />
-            <input
-              type="number"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              className="rounded border px-2 py-1"
-            />
-            <input
-              value={form.animal_emoji}
-              onChange={(e) => setForm({ ...form, animal_emoji: e.target.value })}
-              className="rounded border px-2 py-1"
-            />
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Program name">
+              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} />
+            </Field>
+            <Field label="Forest range">
+              <input
+                value={form.forest_range}
+                onChange={(e) => setForm({ ...form, forest_range: e.target.value })}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Price per person (₹)">
+              <input
+                type="number"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Emoji">
+              <input
+                value={form.animal_emoji}
+                onChange={(e) => setForm({ ...form, animal_emoji: e.target.value })}
+                className={inputClass}
+              />
+            </Field>
           </div>
-          <input
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="rounded border px-2 py-1"
-          />
-          <input
-            value={form.highlight_animals}
-            onChange={(e) => setForm({ ...form, highlight_animals: e.target.value })}
-            className="rounded border px-2 py-1"
-          />
+          <Field label="Description">
+            <input
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Native animals (comma separated)">
+            <input
+              value={form.highlight_animals}
+              onChange={(e) => setForm({ ...form, highlight_animals: e.target.value })}
+              className={inputClass}
+            />
+          </Field>
           <div className="flex gap-2">
             <button
               onClick={handleSave}
@@ -342,8 +359,8 @@ function ProgramCard({ program, onChanged }: { program: ProgramWithSlots; onChan
           </div>
         </div>
       ) : (
-        <div className="flex items-start justify-between">
-          <div>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
             <p className="font-display text-lg font-bold text-jungle-800">
               {program.animal_emoji} {program.name}
             </p>
@@ -362,7 +379,7 @@ function ProgramCard({ program, onChanged }: { program: ProgramWithSlots; onChan
         </div>
       )}
 
-      <div className="flex flex-col gap-2 border-t pt-3">
+      <div className="flex min-w-0 flex-col gap-2 border-t pt-3">
         <p className="text-sm font-semibold text-jungle-700">Safari timings</p>
         {program.program_slots.length === 0 && <p className="text-sm text-gray-400">No timings added yet.</p>}
         {program.program_slots
@@ -393,33 +410,26 @@ export default function AdminPrograms() {
   useEffect(reload, [])
 
   return (
-    <div className="mx-auto my-6 max-w-3xl rounded-2xl bg-white/95 px-4 py-8 shadow-xl backdrop-blur-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold text-jungle-800">Manage Safaris</h1>
-        <div className="flex items-center gap-2">
-          <Link to="/admin" className="rounded-full border-2 border-jungle-200 px-4 py-1 text-sm text-jungle-700">
-            Dashboard
-          </Link>
-          <button
-            onClick={() => supabase.auth.signOut()}
-            className="rounded-full border-2 border-jungle-200 px-4 py-1 text-sm text-jungle-700"
-          >
-            Sign out
-          </button>
+    <div className="min-h-screen">
+      <StaffTabBar />
+      <div className="px-4">
+        <div className="mx-auto my-6 max-w-3xl min-w-0 rounded-2xl bg-white/95 px-4 py-8 shadow-xl backdrop-blur-sm">
+          <h1 className="mb-4 font-display text-2xl font-bold text-jungle-800">Manage Safaris</h1>
+
+          {error && <p className="text-red-600">{error}</p>}
+
+          {loading ? (
+            <SnakeLoader label="Loading safaris…" />
+          ) : (
+            <div className="flex min-w-0 flex-col gap-4">
+              <NewProgramForm onCreated={reload} />
+              {programs.map((program) => (
+                <ProgramCard key={program.id} program={program} onChanged={reload} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
-
-      {error && <p className="text-red-600">{error}</p>}
-      {loading && <p className="text-gray-500">Loading…</p>}
-
-      {!loading && (
-        <div className="flex flex-col gap-4">
-          <NewProgramForm onCreated={reload} />
-          {programs.map((program) => (
-            <ProgramCard key={program.id} program={program} onChanged={reload} />
-          ))}
-        </div>
-      )}
     </div>
   )
 }

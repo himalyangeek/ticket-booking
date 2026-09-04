@@ -70,3 +70,14 @@ body {
   font-family: var(--font-display);
   background: var(--color-jungle-900);
 }
+
+/* Mobile WebViews (Android System WebView / iOS WKWebView) show a default
+   gray/blue tap-highlight flash on every touch and can render a focus outline
+   that desktop Chrome doesn't — kill both so buttons look clean on-device. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+a {
+  touch-action: manipulation;
+}

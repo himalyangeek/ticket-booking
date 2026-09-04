@@ -1,14 +1,11 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { QRScanner } from '../components/QRScanner'
-import { useAuth } from '../lib/AuthContext'
+import { StaffTabBar } from '../components/StaffTabBar'
 import { consumeTicket, verifyTicket } from '../lib/api'
-import { supabase } from '../lib/supabase'
 import { parseQrPayload } from '../lib/validation'
 import type { ScanOutcome } from '../types/ticket'
 
 export default function Scanner() {
-  const { profile } = useAuth()
   const [outcome, setOutcome] = useState<ScanOutcome | null>(null)
   const [busy, setBusy] = useState(false)
   const [parseError, setParseError] = useState<string | null>(null)
@@ -53,72 +50,62 @@ export default function Scanner() {
   }
 
   return (
-    <div className="mx-auto my-6 flex max-w-md flex-col items-center gap-4 rounded-2xl bg-white/95 px-4 py-10 shadow-xl backdrop-blur-sm">
-      <div className="flex w-full items-center justify-between">
-        <h1 className="text-2xl font-semibold">Scan tickets</h1>
-        <div className="flex items-center gap-2">
-          {profile?.role === 'ADMIN' && (
-            <Link to="/admin" className="rounded-full border-2 border-jungle-200 px-3 py-1 text-sm text-jungle-700">
-              Dashboard
-            </Link>
-          )}
-          <button
-            onClick={() => supabase.auth.signOut()}
-            className="rounded-full border-2 border-jungle-200 px-3 py-1 text-sm text-jungle-700"
-          >
-            Sign out
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen">
+      <StaffTabBar />
+      <div className="px-4">
+        <div className="mx-auto my-6 flex max-w-md flex-col items-center gap-4 rounded-2xl bg-white/95 px-4 py-10 shadow-xl backdrop-blur-sm">
+          <h1 className="w-full text-2xl font-semibold">Scan tickets</h1>
 
-      <QRScanner onDecode={handleDecode} paused={busy || outcome !== null} />
+          <QRScanner onDecode={handleDecode} paused={busy || outcome !== null} />
 
-      {parseError && <p className="text-red-600">{parseError}</p>}
+          {parseError && <p className="text-red-600">{parseError}</p>}
 
-      {outcome && (
-        <div
-          className={`w-full rounded border p-4 text-center ${
-            outcome.result === 'VALID' ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'
-          }`}
-        >
-          <p className={`text-lg font-semibold ${outcome.result === 'VALID' ? 'text-green-700' : 'text-red-700'}`}>
-            {outcome.result}
-          </p>
-          {outcome.reason && <p className="text-sm text-gray-600">{outcome.reason}</p>}
-          {outcome.ticket && (
-            <div className="mt-2 flex flex-col gap-0.5 text-left text-sm text-gray-700">
-              <p className="text-center font-mono text-xs text-gray-500">{outcome.ticket.ticket_number}</p>
-              <p>
-                <span className="text-gray-500">Booker:</span> {outcome.ticket.booker_name}
+          {outcome && (
+            <div
+              className={`w-full rounded border p-4 text-center ${
+                outcome.result === 'VALID' ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'
+              }`}
+            >
+              <p className={`text-lg font-semibold ${outcome.result === 'VALID' ? 'text-green-700' : 'text-red-700'}`}>
+                {outcome.result}
               </p>
-              <p>
-                <span className="text-gray-500">Mobile:</span> {outcome.ticket.booker_mobile}
-              </p>
-              <p>
-                <span className="text-gray-500">Aadhaar:</span> •••• •••• {outcome.ticket.aadhaar_last4}
-              </p>
-              <p>
-                <span className="text-gray-500">Passengers:</span> {outcome.ticket.passenger_count}
-              </p>
+              {outcome.reason && <p className="text-sm text-gray-600">{outcome.reason}</p>}
+              {outcome.ticket && (
+                <div className="mt-2 flex flex-col gap-0.5 text-left text-sm text-gray-700">
+                  <p className="text-center font-mono text-xs text-gray-500">{outcome.ticket.ticket_number}</p>
+                  <p>
+                    <span className="text-gray-500">Booker:</span> {outcome.ticket.booker_name}
+                  </p>
+                  <p>
+                    <span className="text-gray-500">Mobile:</span> {outcome.ticket.booker_mobile}
+                  </p>
+                  <p>
+                    <span className="text-gray-500">Aadhaar:</span> •••• •••• {outcome.ticket.aadhaar_last4}
+                  </p>
+                  <p>
+                    <span className="text-gray-500">Passengers:</span> {outcome.ticket.passenger_count}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-3 flex justify-center gap-2">
+                {outcome.result === 'VALID' && outcome.ticket?.status === 'ACTIVE' && (
+                  <button
+                    onClick={handleAdmit}
+                    disabled={busy}
+                    className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+                  >
+                    Admit
+                  </button>
+                )}
+                <button onClick={reset} disabled={busy} className="rounded border px-4 py-2">
+                  Scan next
+                </button>
+              </div>
             </div>
           )}
-
-          <div className="mt-3 flex justify-center gap-2">
-            {outcome.result === 'VALID' && outcome.ticket?.status === 'ACTIVE' && (
-              <button
-                onClick={handleAdmit}
-                disabled={busy}
-                className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-              >
-                Admit
-              </button>
-            )}
-            <button onClick={reset} disabled={busy} className="rounded border px-4 py-2">
-              Scan next
-            </button>
-          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

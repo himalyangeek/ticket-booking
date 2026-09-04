@@ -34,21 +34,27 @@ export default function FindTicket() {
         <h1 className="font-display text-2xl font-bold text-jungle-800">Find My Ticket</h1>
 
         <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
-          <input
-            required
-            placeholder="Ticket number (e.g. TKT-...)"
-            value={ticketNumber}
-            onChange={(e) => setTicketNumber(e.target.value.toUpperCase())}
-            className="rounded-lg border-2 border-jungle-200 px-3 py-2"
-          />
-          <input
-            required
-            placeholder="Mobile number"
-            inputMode="numeric"
-            value={mobile}
-            onChange={(e) => setMobile(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
-            className="rounded-lg border-2 border-jungle-200 px-3 py-2"
-          />
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-gray-600">Ticket number</span>
+            <input
+              required
+              placeholder="e.g. TKT-XXXXXXXX-XXXXXXXX"
+              value={ticketNumber}
+              onChange={(e) => setTicketNumber(e.target.value.toUpperCase())}
+              className="rounded-lg border-2 border-jungle-200 px-3 py-2"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-gray-600">Mobile number</span>
+            <input
+              required
+              placeholder="10-digit mobile number"
+              inputMode="numeric"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value.replace(/[^\d]/g, '').slice(0, 10))}
+              className="rounded-lg border-2 border-jungle-200 px-3 py-2"
+            />
+          </label>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             type="submit"
