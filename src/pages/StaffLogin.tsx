@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/Navbar'
 import { useAuth } from '../lib/AuthContext'
@@ -11,6 +11,12 @@ export default function StaffLogin() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // Most staff end up at the scanner sooner or later — start downloading its
+  // JS chunk now so it's warm well before they get there.
+  useEffect(() => {
+    void import('./Scanner')
+  }, [])
 
   if (session && profile) {
     return <Navigate to={profile.role === 'ADMIN' ? '/admin' : '/scan'} replace />

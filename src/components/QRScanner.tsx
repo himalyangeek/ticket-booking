@@ -6,6 +6,10 @@ interface QRScannerProps {
   paused?: boolean
 }
 
+// Modest fixed resolution — QR decoding doesn't need HD, and asking for less
+// lets getUserMedia negotiate a stream faster than the browser's default.
+const CONSTRAINTS = { facingMode: 'environment', width: { ideal: 720 }, height: { ideal: 720 } }
+
 export function QRScanner({ onDecode, paused }: QRScannerProps) {
   const lastValueRef = useRef<string | null>(null)
 
@@ -24,7 +28,11 @@ export function QRScanner({ onDecode, paused }: QRScannerProps) {
           onDecode(value)
         }}
         onError={(error) => console.error('QR scanner error', error)}
-        constraints={{ facingMode: 'environment' }}
+        constraints={CONSTRAINTS}
+        // We never show zoom/torch controls, so there's nothing to wait for
+        // here — the library's default 500ms only exists to let those
+        // capabilities settle before reading them.
+        settleDelayMs={0}
       />
     </div>
   )

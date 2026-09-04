@@ -11,13 +11,19 @@ function Spinner() {
   )
 }
 
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 export function DownloadTicketButton({ qr, meta }: { qr: QrPayload; meta: TicketImageMeta }) {
   const [downloading, setDownloading] = useState(false)
 
   async function handleClick() {
     setDownloading(true)
     try {
-      await downloadTicketImage(qr, meta)
+      // The actual render is near-instant, which makes the spinner just flash —
+      // hold the loading state for a minimum stretch so it's actually visible.
+      await Promise.all([downloadTicketImage(qr, meta), wait(2500)])
     } finally {
       setDownloading(false)
     }

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -5,6 +6,13 @@ import { supabase } from '../lib/supabase'
 export function StaffTabBar() {
   const { pathname } = useLocation()
   const { profile } = useAuth()
+
+  // Warm the Scanner page's JS chunk (camera/barcode-detection library) as
+  // soon as any staff page is open, so clicking "Scan Tickets" doesn't pay
+  // for a download+parse on top of the camera's own startup time.
+  useEffect(() => {
+    if (pathname !== '/scan') void import('../pages/Scanner')
+  }, [pathname])
 
   const tabs = [
     { to: '/admin', label: 'Dashboard', show: profile?.role === 'ADMIN' },
