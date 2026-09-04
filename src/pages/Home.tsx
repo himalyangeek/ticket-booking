@@ -7,20 +7,36 @@ import { useAuth } from '../lib/AuthContext'
 import { listPrograms } from '../lib/api'
 import type { Program } from '../types/ticket'
 
+// Module-level, not component state — survives Home unmounting/remounting as
+// the user navigates the SPA, but resets on an actual page load. That's what
+// makes "redirect once on app open" distinct from "redirect every time Home
+// is visited": a real reload re-executes this module, an in-app nav does not.
+let hasRedirectedStaffOnOpen = false
+
 export default function Home() {
   const { session, profile, loading } = useAuth()
   const [programs, setPrograms] = useState<Program[]>([])
   const [selected, setSelected] = useState<Program | null>(null)
   const [hoveredCard, setHoveredCard] = useState(false)
+  // Lazy initializer runs once per mount (StrictMode-safe) — captures whether
+  // this Home mount is the app's first open, before anything can flip the flag.
+  const [skipRedirect] = useState(() => hasRedirectedStaffOnOpen)
 
   useEffect(() => {
     listPrograms().then(setPrograms)
   }, [])
 
   // A signed-in staff member opening the app should land straight on their
-  // own area, not the public booking page.
-  if (!loading && session && profile) {
-    return <Navigate to={profile.role === 'ADMIN' ? '/admin' : '/scan'} replace />
+  // own area — but only on that first open. If they explicitly navigate back
+  // to Home afterward (the logo, the tab bar's Home icon), let them stay.
+  const shouldRedirectStaff = !loading && !!session && !!profile && !skipRedirect
+
+  useEffect(() => {
+    if (shouldRedirectStaff) hasRedirectedStaffOnOpen = true
+  }, [shouldRedirectStaff])
+
+  if (shouldRedirectStaff) {
+    return <Navigate to={profile!.role === 'ADMIN' ? '/admin' : '/scan'} replace />
   }
 
   return (
