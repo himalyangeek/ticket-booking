@@ -46,7 +46,10 @@ export function Calendar({ value, onChange, daysAhead = 30, minDate, maxDate }: 
   }, [maxDate, today, daysAhead])
 
   const [viewMonth, setViewMonth] = useState(() => {
-    const start = value ? parseISODate(value) : rangeMin
+    // Open on the selected date if there is one, otherwise today (clamped into
+    // range) — not rangeMin, which can be years back for a wide-open filter.
+    const fallback = today < rangeMin ? rangeMin : today > rangeMax ? rangeMax : today
+    const start = value ? parseISODate(value) : fallback
     return new Date(start.getFullYear(), start.getMonth(), 1)
   })
 
@@ -75,7 +78,7 @@ export function Calendar({ value, onChange, daysAhead = 30, minDate, maxDate }: 
         <button
           type="button"
           disabled={!canGoPrev}
-          onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1))}
+          onClick={() => setViewMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-jungle-700 disabled:opacity-30"
           aria-label="Previous month"
         >
@@ -89,7 +92,7 @@ export function Calendar({ value, onChange, daysAhead = 30, minDate, maxDate }: 
         <button
           type="button"
           disabled={!canGoNext}
-          onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1))}
+          onClick={() => setViewMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-jungle-700 disabled:opacity-30"
           aria-label="Next month"
         >

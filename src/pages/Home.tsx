@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import { BookingDialog } from '../components/BookingDialog'
 import { JungleBackground } from '../components/JungleBackground'
 import { Navbar } from '../components/Navbar'
+import { useAuth } from '../lib/AuthContext'
 import { listPrograms } from '../lib/api'
 import type { Program } from '../types/ticket'
 
 export default function Home() {
+  const { session, profile, loading } = useAuth()
   const [programs, setPrograms] = useState<Program[]>([])
   const [selected, setSelected] = useState<Program | null>(null)
   const [hoveredCard, setHoveredCard] = useState(false)
@@ -13,6 +16,12 @@ export default function Home() {
   useEffect(() => {
     listPrograms().then(setPrograms)
   }, [])
+
+  // A signed-in staff member opening the app should land straight on their
+  // own area, not the public booking page.
+  if (!loading && session && profile) {
+    return <Navigate to={profile.role === 'ADMIN' ? '/admin' : '/scan'} replace />
+  }
 
   return (
     <div>

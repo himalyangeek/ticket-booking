@@ -10,15 +10,15 @@ function isExpired(ticket: TicketRow) {
   return ticket.status === 'ACTIVE' && new Date(ticket.expires_at).getTime() <= Date.now()
 }
 
-// Bookings can be filtered well into the past or future, unlike the public
-// booking calendar which only looks a month ahead.
+// Bookings can be filtered across any date, unlike the public booking
+// calendar which only looks a month ahead — no "today" floor here.
 function isoDaysFromNow(days: number) {
   const d = new Date()
   d.setDate(d.getDate() + days)
   return d.toISOString().slice(0, 10)
 }
-const FILTER_MIN_DATE = isoDaysFromNow(-730)
-const FILTER_MAX_DATE = isoDaysFromNow(730)
+const FILTER_MIN_DATE = '2000-01-01'
+const FILTER_MAX_DATE = isoDaysFromNow(3650)
 
 export default function AdminDashboard() {
   const [tickets, setTickets] = useState<TicketRow[]>([])
@@ -72,6 +72,8 @@ export default function AdminDashboard() {
                 <thead className="bg-jungle-50 text-jungle-700">
                   <tr>
                     <th className="p-2">Ticket #</th>
+                    <th className="p-2">Status</th>
+                    <th className="p-2">Expired?</th>
                     <th className="p-2">Program</th>
                     <th className="p-2">Visit date</th>
                     <th className="p-2">Booker</th>
@@ -80,22 +82,12 @@ export default function AdminDashboard() {
                     <th className="p-2">Pax</th>
                     <th className="p-2">Amount</th>
                     <th className="p-2">Payment</th>
-                    <th className="p-2">Status</th>
-                    <th className="p-2">Expired?</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tickets.map((t) => (
                     <tr key={t.id} className="border-t">
                       <td className="p-2 font-mono text-xs">{t.ticket_number}</td>
-                      <td className="p-2">{t.programs?.name}</td>
-                      <td className="p-2">{t.visit_date}</td>
-                      <td className="p-2">{t.booker_name}</td>
-                      <td className="p-2">{t.booker_mobile}</td>
-                      <td className="p-2">•••• {t.aadhaar_last4}</td>
-                      <td className="p-2">{t.passenger_count}</td>
-                      <td className="p-2">₹{t.amount}</td>
-                      <td className="p-2">{t.payment_status}</td>
                       <td className="p-2">{t.status}</td>
                       <td className="p-2">
                         {isExpired(t) ? (
@@ -104,6 +96,14 @@ export default function AdminDashboard() {
                           <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">No</span>
                         )}
                       </td>
+                      <td className="p-2">{t.programs?.name}</td>
+                      <td className="p-2">{t.visit_date}</td>
+                      <td className="p-2">{t.booker_name}</td>
+                      <td className="p-2">{t.booker_mobile}</td>
+                      <td className="p-2">•••• {t.aadhaar_last4}</td>
+                      <td className="p-2">{t.passenger_count}</td>
+                      <td className="p-2">₹{t.amount}</td>
+                      <td className="p-2">{t.payment_status}</td>
                     </tr>
                   ))}
                   {tickets.length === 0 && (
