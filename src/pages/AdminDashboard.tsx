@@ -30,6 +30,12 @@ export default function AdminDashboard() {
         <h1 className="font-display text-2xl font-bold text-jungle-800">Booking Dashboard</h1>
         <div className="flex items-center gap-2">
           <Link
+            to="/admin/programs"
+            className="rounded-full border-2 border-jungle-200 px-4 py-1 text-sm text-jungle-700"
+          >
+            Manage Safaris
+          </Link>
+          <Link
             to="/scan"
             className="rounded-full border-2 border-jungle-200 px-4 py-1 text-sm text-jungle-700"
           >

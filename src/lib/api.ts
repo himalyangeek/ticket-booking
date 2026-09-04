@@ -45,6 +45,69 @@ export async function listSlotsForDate(programId: string, date: string) {
   return data as ProgramSlot[]
 }
 
+export interface ProgramInput {
+  name: string
+  description: string | null
+  price: number
+  forest_range: string
+  highlight_animals: string[]
+  animal_emoji: string
+}
+
+export type ProgramWithSlots = Program & { program_slots: ProgramSlot[] }
+
+export async function adminListProgramsWithSlots() {
+  const { data, error } = await supabase
+    .from('programs')
+    .select('*, program_slots(*)')
+    .order('forest_range')
+  if (error) throw error
+  return data as ProgramWithSlots[]
+}
+
+export async function adminCreateProgram(input: ProgramInput) {
+  const { data, error } = await supabase.from('programs').insert(input).select().single()
+  if (error) throw error
+  return data as Program
+}
+
+export async function adminUpdateProgram(id: string, input: Partial<ProgramInput>) {
+  const { data, error } = await supabase.from('programs').update(input).eq('id', id).select().single()
+  if (error) throw error
+  return data as Program
+}
+
+export async function adminDeleteProgram(id: string) {
+  const { error } = await supabase.from('programs').delete().eq('id', id)
+  if (error) throw error
+}
+
+export interface SlotInput {
+  program_id: string
+  starts_at: string
+  ends_at: string
+  capacity: number
+  available_capacity: number
+  session_label: string
+}
+
+export async function adminCreateSlot(input: SlotInput) {
+  const { data, error } = await supabase.from('program_slots').insert(input).select().single()
+  if (error) throw error
+  return data as ProgramSlot
+}
+
+export async function adminUpdateSlot(id: string, input: Partial<SlotInput>) {
+  const { data, error } = await supabase.from('program_slots').update(input).eq('id', id).select().single()
+  if (error) throw error
+  return data as ProgramSlot
+}
+
+export async function adminDeleteSlot(id: string) {
+  const { error } = await supabase.from('program_slots').delete().eq('id', id)
+  if (error) throw error
+}
+
 export interface AdminTicketFilters {
   from?: string
   to?: string

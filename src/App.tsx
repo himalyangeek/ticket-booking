@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import StaffLogin from './pages/StaffLogin'
 
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const AdminPrograms = lazy(() => import('./pages/AdminPrograms'))
 // The scanner page pulls in a camera/barcode-detection library only staff need —
 // code-split so regular visitors never download it.
 const Scanner = lazy(() => import('./pages/Scanner'))
@@ -24,6 +25,16 @@ export default function App() {
           <ProtectedRoute require="admin">
             <Suspense fallback={loadingFallback}>
               <AdminDashboard />
+            </Suspense>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/programs"
+        element={
+          <ProtectedRoute require="admin">
+            <Suspense fallback={loadingFallback}>
+              <AdminPrograms />
             </Suspense>
           </ProtectedRoute>
         }
